@@ -1,0 +1,58 @@
+diff --git a/utils/p4runtime_switch.py b/utils/p4runtime_switch.py
+index 7c46c88..b15c5fc 100644
+--- a/utils/p4runtime_switch.py
++++ b/utils/p4runtime_switch.py
+@@ -39,6 +39,7 @@ class P4RuntimeSwitch(P4Switch):
+                  device_id = None,
+                  enable_debugger = False,
+                  log_file = None,
++                 cpu_port = None,
+                  **kwargs):
+         Switch.__init__(self, name, **kwargs)
+         assert (sw_path)
+@@ -88,6 +89,7 @@ class P4RuntimeSwitch(P4Switch):
+             self.device_id = P4Switch.device_id
+             P4Switch.device_id += 1
+         self.nanomsg = "ipc:///tmp/bm-{}-log.ipc".format(self.device_id)
++        self.cpu_port = cpu_port
+ 
+ 
+     def check_switch_started(self, pid):
+@@ -120,8 +122,12 @@ class P4RuntimeSwitch(P4Switch):
+             args.append("--log-console")
+         if self.thrift_port:
+             args.append('--thrift-port ' + str(self.thrift_port))
++
++        args.append("--")   # target specific options
+         if self.grpc_port:
+-            args.append("-- --grpc-server-addr 0.0.0.0:" + str(self.grpc_port))
++            args.append("--grpc-server-addr 0.0.0.0:" + str(self.grpc_port))
++        if self.cpu_port:
++            args.append("--cpu-port %d" % (self.cpu_port))
+         cmd = ' '.join(args)
+         info(cmd + "\n")
+ 
+diff --git a/utils/run_exercise.py b/utils/run_exercise.py
+index 44c8ff6..f704e32 100755
+--- a/utils/run_exercise.py
++++ b/utils/run_exercise.py
+@@ -87,7 +87,8 @@ class ExerciseTopo(Topo):
+                         sw_path=bmv2_exe,
+                         json_path=params["program"],
+                         log_console=True,
+-                        pcap_dump=pcap_dir)
++                        pcap_dump=pcap_dir,
++                        cpu_port=255)
+             else:
+                 # add default switch
+                 switchClass = None
+@@ -249,7 +250,8 @@ class ExerciseRunner:
+                                 sw_path=self.bmv2_exe,
+                                 json_path=self.switch_json,
+                                 log_console=True,
+-                                pcap_dump=self.pcap_dir)
++                                pcap_dump=self.pcap_dir,
++                                cpu_port=255)
+ 
+         self.topo = ExerciseTopo(self.hosts, self.switches, self.links, self.log_dir, self.bmv2_exe, self.pcap_dir)
+ 

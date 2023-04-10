@@ -1,0 +1,33 @@
+{
+    "target": "bmv2",
+    "p4info": "build/hardened.p4.p4info.txt",
+    "bmv2_json": "build/hardened.json",
+    "table_entries": [
+        {
+            "table": "MyIngress.ethernet_exact",
+            "default_action": true,
+            "action_name": "MyIngress.drop",
+            "action_params": { }
+        },
+        {
+            "table": "MyIngress.ethernet_exact",
+            "match": {
+                "hdr.ethernet.dstAddr": "08:00:00:00:01:11"
+            },
+            "action_name": "MyIngress.ethernet_forward",
+            "action_params": {
+                "port": 1
+            }
+        },
+        {
+            "table": "MyIngress.ethernet_exact",
+            "match": {
+                "hdr.ethernet.dstAddr": "08:00:00:00:02:22"
+            },
+            "action_name": "MyIngress.ethernet_forward",
+            "action_params": {
+                "port": 2
+            }
+        }
+    ]
+}
