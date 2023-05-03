@@ -5,6 +5,17 @@ import sys
 import json 
 from time import sleep
 
+###################################################################
+## Flags
+###################################################################
+
+CHECK_ARP = True
+MININET = False
+
+if not MININET:
+    # Fix for ModuleNotFound problem in docker
+    sys.path.insert(0, "/usr/lib/python3/dist-packages")
+
 from p4.v1 import p4runtime_pb2
 import grpc
 
@@ -29,12 +40,6 @@ SUBNET_TEMPLATE = "10.0.1.{}"
 NEXTHOP_SWITCHES = []
 BCAST_IDX, PORTS = 0x10, 4                # broadcast to all hosts except the sender
 DISCOVERED_ETHERNET = {}
-
-###################################################################
-## Flags
-###################################################################
-
-CHECK_ARP = True
 
 ###################################################################
 ## Util functions
@@ -299,9 +304,10 @@ def connect_switch(name, index, p4info_helper, bmv2_file_path):
 
 def initialize_ethernet_table(sw, p4info_helper):
     insert_ethernet_exact_default_action(sw, p4info_helper)
-    ethernet_discover(sw, p4info_helper, "08:00:00:00:01:11", 1)
-    ethernet_discover(sw, p4info_helper, "08:00:00:00:02:22", 2)
-    ethernet_discover(sw, p4info_helper, "08:00:00:00:05:55", 4)
+    if MININET:
+        ethernet_discover(sw, p4info_helper, "08:00:00:00:01:11", 1)
+        ethernet_discover(sw, p4info_helper, "08:00:00:00:02:22", 2)
+        ethernet_discover(sw, p4info_helper, "08:00:00:00:05:55", 4)
     insert_ethernet_exact_entry(sw, p4info_helper, { "hdr.ethernet.dstAddr": ETHERNET_BROADCAST }, "MyIngress.ethernet_broadcast", {})
 
 def initialize_multicast_table(sw, p4info_helper):
