@@ -29,22 +29,23 @@ def main():
     print("Usage: \n{argv0} [port] [tap_ip] - use as server\n{argv0} [ip] [port] [tap_ip] - use as client".format(argv0=sys.argv[0]))
     return 1
 
+  mtu = 1472
   tap = TunTapDevice(flags=IFF_TAP|IFF_NO_PI)
   if tap_ip != "undefined":
     sh.ip.addr.add(tap_ip, 'dev', tap.name)
   sh.ip.link.set(tap.name, 'up')
-  sh.ip.link.set(tap.name, 'mtu', '1472')
+  sh.ip.link.set(tap.name, 'mtu', str(mtu))
 
   print("TAP Device {} up.".format(tap.name))
   while True:
     r, w, x = select.select([tap, conn], [], [], 0.001)
     if tap in r:
-      buf = tap.read(tap.mtu//8).ljust(tap.mtu//8, b'\x00')
+      buf = tap.read(tap.mtu).ljust(tap.mtu, b'\x00')
       conn.sendall(buf)
     if conn in r:
       buf = b''
-      while len(buf) != tap.mtu//8:
-        buf += conn.recv(tap.mtu//8 - len(buf))
+      while len(buf) != tap.mtu:
+        buf += conn.recv(tap.mtu - len(buf))
       tap.write(buf)
 
   return 0
